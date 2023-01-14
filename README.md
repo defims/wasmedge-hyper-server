@@ -39,5 +39,3 @@ $ curl http://localhost:8080/echo -X POST -d "WasmEdge"
 WasmEdge
 ```
 
-## test
-
