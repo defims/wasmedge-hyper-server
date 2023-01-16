@@ -22,31 +22,27 @@ load: target/wasm32-wasi/$(TARGET)/img.tar
 
 .PHONY: test-ctr
 test-ctr: load
-	sudo ctr run --rm --runtime=io.containerd.wasmedge.v1 ghcr.io/containerd/runwasi/wasmedge-hyper-server:latest wasmedge-hyper-server
+	sudo ctr run --rm --net-host --runtime=io.containerd.wasmedge.v1 ghcr.io/containerd/runwasi/wasmedge-hyper-server:latest wasmedge-hyper-server
 
 .PHONY: test-kubectl
 test-kubectl: load
 	@sudo kubectl apply -f wasm.yml; \
-	clusterIP=""; \
 	phase=""; \
-	while [ -z "$$clusterIP" ] || [ "$$phase" != "Running" ]; do \
+	while [ "$$phase" != "Running" ]; do \
           phase=`sudo kubectl get pods --selector='app=wasmedge-hyper-server' -o custom-columns=STATUS:.status.phase --no-headers=true`; \
-          clusterIP=`sudo kubectl get service --selector='app=wasmedge-hyper-server' -o custom-columns=CLUSTER-IP:.spec.clusterIP --no-headers=true`; \
 	  sleep .5; \
 	done; \
-	sudo curl $$clusterIP:8080; \
+	sudo curl localhost:30001; \
 	sudo kubectl delete -f wasm.yml
 
 .PHONY: test-nginx
 test-nginx: 
-	sudo kubectl apply -f nginx.yml 
-	@clusterIP=""; \
+	@sudo kubectl apply -f nginx.yml; \
 	phase=""; \
-	while [ -z "$$clusterIP" ] || [ "$$phase" != "Running" ]; do \
+	while [ "$$phase" != "Running" ]; do \
           phase=`sudo kubectl get pods --selector='app=nginx' -o custom-columns=STATUS:.status.phase --no-headers=true`; \
-          clusterIP=`sudo kubectl get service --selector='app=nginx' -o custom-columns=CLUSTER-IP:.spec.clusterIP --no-headers=true`; \
 	  sleep .5; \
 	done; \
-	sudo curl $$clusterIP:8080; \
+	sudo curl localhost:30000; \
 	sudo kubectl delete -f nginx.yml
 
